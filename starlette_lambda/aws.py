@@ -5,10 +5,19 @@ import urllib.parse
 from starlette.types import Message
 from starlette.applications import Starlette
 
+from uvicorn.lifespan import Lifespan
 
 class LambdaFunction(Starlette):
 
     def lambda_handler(self, event, context):
+        loop = asyncio.get_event_loop()
+        lifespan = Lifespan(self)
+        lifespan_setup = loop.create_task(lifespan.run())
+
+        loop.run_until_complete(lifespan_setup)
+
+        await lifespan.wait_startup()
+
         connection_scope = {
             'type': 'http',
             'http_version': '1.1',
@@ -46,8 +55,9 @@ class LambdaFunction(Starlette):
 
         asgi = self(connection_scope)
 
-        loop = asyncio.get_event_loop()
         task = loop.create_task(asgi(_receive, _send))
         loop.run_until_complete(task)
+
+        await lifespan.wait_shutdown()
 
         return response
