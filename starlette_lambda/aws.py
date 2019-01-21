@@ -53,9 +53,7 @@ class LambdaFunction:
                 response["body"] = message['body'].decode('utf-8')
 
         asgi = self._asgi(connection_scope)
-        task = loop.create_task(asgi(_receive, _send))
-        loop.run_until_complete(task)
-
+        loop.run_until_complete(asgi(_receive, _send))
         loop.run_until_complete(lifespan.wait_shutdown())
 
         return response
