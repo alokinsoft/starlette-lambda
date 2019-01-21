@@ -16,6 +16,8 @@ class LambdaFunction(Starlette):
 
         loop.run_until_complete(lifespan_setup)
 
+        print("waiting for lifespan")
+
         # startup = loop.create_task(lifespan.wait_startup())
         # loop.run_until_complete(startup)
 
@@ -56,8 +58,10 @@ class LambdaFunction(Starlette):
 
         asgi = self(connection_scope)
 
+        print("sending data to asgi")
         task = loop.create_task(asgi(_receive, _send))
         loop.run_until_complete(task)
+        print("completed asgi")
 
         # shutdown = loop.create_task(lifespan.wait_shutdown())
         # loop.run_until_complete(shutdown)
