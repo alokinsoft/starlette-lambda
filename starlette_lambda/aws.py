@@ -16,7 +16,8 @@ class LambdaFunction(Starlette):
 
         loop.run_until_complete(lifespan_setup)
 
-        await lifespan.wait_startup()
+        startup = loop.create_task(lifespan.wait_startup())
+        loop.run_until_complete(startup)
 
         connection_scope = {
             'type': 'http',
@@ -58,6 +59,7 @@ class LambdaFunction(Starlette):
         task = loop.create_task(asgi(_receive, _send))
         loop.run_until_complete(task)
 
-        await lifespan.wait_shutdown()
+        shutdown = loop.create_task(lifespan.wait_shutdown())
+        loop.run_until_complete(shutdown)
 
         return response
