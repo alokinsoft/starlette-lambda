@@ -2,27 +2,20 @@ import asyncio
 import base64
 import urllib.parse
 
-from starlette.types import Message
-from starlette.applications import Starlette
+from starlette.types import Message, ASGIApp
 
 from uvicorn.lifespan import Lifespan
 
-class LambdaFunction(Starlette):
+class LambdaFunction:
+
+    def __init__(self, asgi: ASGIApp):
+        self._asgi = asgi
 
     def lambda_handler(self, event, context):
-        print("in handler")
         loop = asyncio.get_event_loop()
-        print("got event loop")
-        lifespan = Lifespan(self)
-        print("created lifespan")
-        lifespan_setup = loop.create_task(lifespan.run())
-        orint("starting lifespan setup")
-        loop.run_until_complete(lifespan_setup)
-
-        print("waiting for lifespan")
-
-        # startup = loop.create_task(lifespan.wait_startup())
-        # loop.run_until_complete(startup)
+        lifespan = Lifespan(self._asgi)
+        loop.create_task(lifespan.run())
+        loop.run_until_complete(lifespan.wait_startup())
 
         connection_scope = {
             'type': 'http',
@@ -59,14 +52,10 @@ class LambdaFunction(Starlette):
             if message['type'] == 'http.response.body':
                 response["body"] = message['body'].decode('utf-8')
 
-        asgi = self(connection_scope)
-
-        print("sending data to asgi")
+        asgi = self._asgi(connection_scope)
         task = loop.create_task(asgi(_receive, _send))
         loop.run_until_complete(task)
-        print("completed asgi")
 
-        # shutdown = loop.create_task(lifespan.wait_shutdown())
-        # loop.run_until_complete(shutdown)
+        loop.run_until_complete(lifespan.wait_shutdown())
 
         return response
