@@ -10,10 +10,13 @@ from uvicorn.lifespan import Lifespan
 class LambdaFunction(Starlette):
 
     def lambda_handler(self, event, context):
+        print("in handler")
         loop = asyncio.get_event_loop()
+        print("got event loop")
         lifespan = Lifespan(self)
+        print("created lifespan")
         lifespan_setup = loop.create_task(lifespan.run())
-
+        orint("starting lifespan setup")
         loop.run_until_complete(lifespan_setup)
 
         print("waiting for lifespan")
