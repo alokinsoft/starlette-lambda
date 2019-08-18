@@ -7,7 +7,7 @@ install_requires = [
 
 setup(
     name="starlette-lambda",
-    version="0.1.0",
+    version="0.1.1",
     author="Alokin",
     author_email="hello@alokin.in",
     description="",

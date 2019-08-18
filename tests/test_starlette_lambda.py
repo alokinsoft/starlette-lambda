@@ -34,7 +34,6 @@ class LambdaContext(object):
             self.client_context.client = None
         self.identity = None
 
-
     def get_remaining_time_in_millis(self):
         return None
 

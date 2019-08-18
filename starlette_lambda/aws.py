@@ -17,20 +17,10 @@ class LambdaFunction:
         loop.create_task(lifespan.run())
         loop.run_until_complete(lifespan.wait_startup())
 
-        connection_scope = {
-            'type': 'http',
-            'http_version': '1.1',
-            'scheme': 'http',
-            'method': event['httpMethod'],
-            'root_path': '',
-            'path': event['path'],
-            'query_string': urllib.parse.urlencode(event['queryStringParameters']),
-            'headers': event['headers'].items(),
-            'x-aws-lambda': {
-                'requestContext': event['requestContext'],
-                'lambdaContext': context
-            }
-        }
+        connection_scope = self.get_connection_scope(
+            event=event,
+            context=context
+        )
 
         async def _receive() -> Message:
             body = event['body']
@@ -57,3 +47,36 @@ class LambdaFunction:
         loop.run_until_complete(lifespan.wait_shutdown())
 
         return response
+
+    def _unwrap_multi_value_parameters(self, parameters: dict):
+        for key, value in parameters.items():
+            if isinstance(value, list):
+                for sub_value in value:
+                    yield key, sub_value
+
+            else:
+                yield key, value
+
+    def get_query_string(self, event: dict):
+        parameters: dict = event['queryStringParameters']
+        parameters.update(event['multiValueQueryStringParameters'])
+
+        pairs = list(self._unwrap_multi_value_parameters(parameters))
+
+        return urllib.parse.urlencode(pairs)
+
+    def get_connection_scope(self, event, context):
+        return {
+            'type': 'http',
+            'http_version': '1.1',
+            'scheme': 'http',
+            'method': event['httpMethod'],
+            'root_path': '',
+            'path': event['path'],
+            'query_string': self.get_query_string(event),
+            'headers': event['headers'].items(),
+            'x-aws-lambda': {
+                'requestContext': event['requestContext'],
+                'lambdaContext': context
+            }
+        }
