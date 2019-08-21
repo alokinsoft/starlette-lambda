@@ -58,11 +58,9 @@ class LambdaFunction:
                 yield key, value
 
     def get_query_string(self, event: dict):
-        parameters: dict = event['queryStringParameters']
-        parameters.update(event['multiValueQueryStringParameters'])
-
+        parameters: dict = event.get('queryStringParameters') or {}
+        parameters.update(event.get('multiValueQueryStringParameters') or {})
         pairs = list(self._unwrap_multi_value_parameters(parameters))
-
         return urllib.parse.urlencode(pairs)
 
     def get_connection_scope(self, event, context):

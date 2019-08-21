@@ -3,6 +3,14 @@ from starlette.applications import Starlette
 from starlette_lambda.aws import LambdaFunction
 
 
+def test_values_missing():
+    query_string = LambdaFunction(asgi=Starlette()).get_query_string(event={
+        'queryStringParameters': None,
+        'multiValueQueryStringParameters': None
+    })
+
+    assert query_string == ''
+
 def test_multi_value():
     query_string = LambdaFunction(asgi=Starlette()).get_query_string(event={
         'queryStringParameters': {'make': 'TOYOTA', 'zip_code': '65301'},
