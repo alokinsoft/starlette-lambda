@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 install_requires = [
     'starlette==0.11.4',
-    'uvicorn==0.3.32'
+    'uvicorn==0.11.7'
 ]
 
 setup(
